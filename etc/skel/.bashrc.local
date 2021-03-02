@@ -1,0 +1,6 @@
+#!/bin/bash
+# If you want to use your own custom prompt theme, you must first
+# unset the PROMPT_COMMAND variable!
+# An example:
+#unset PROMPT_COMMAND
+#PS1="\u@\h \w \\$ "

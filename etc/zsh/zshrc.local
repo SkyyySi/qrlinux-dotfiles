@@ -1,0 +1,266 @@
+#!/usr/bin/env zsh
+
+# This file conatins a few more default settings for ZSH.
+
+#-----------------------------------------------------------------------#
+
+# General options.
+
+# Some default environment variables.
+path-gen() {
+	local d
+
+	local append_pre_path() {
+		for d in ${1}; do
+			if [[ -d ${d} ]] && [[ ! ${d} =~ ${path} ]]; then
+				export path=(${d} ${path})
+			fi
+		done
+	}
+
+	local append_post_path() {
+		for d in ${1}; do
+			if [[ -d ${d} ]] && [[ ! ${d} =~ ${path} ]]; then
+				export path=(${path} ${d})
+			fi
+		done
+	}
+
+	case ${1} in
+		init)
+			local path_prefix=("${HOME}/.local/bin" "${HOME}/.bin" "${HOME}/bin")
+			append_pre_path ${path_prefix}
+			local path_suffix=("${HOME}/.local/bin" "${HOME}/.bin" "${HOME}/bin")
+		;;
+		prefix)
+			shift
+			local p
+			for p in ${@}; do
+				if [[ -d ${p} ]]; then
+					append_pre_path ${p}
+				else
+					echo "Error: '${p}' does not exist or is not a directory! "
+					return 1
+				fi
+			done
+		;;
+		suffix)
+			
+		;;
+		*)
+			
+		;;
+	esac
+}
+
+path-gen
+
+export EDITRO='micro'
+export ALTERNATE_EDITOR='nano'
+export BROWSER='firefox'
+
+#-----------------------------------------------------------------------#
+
+# History.
+
+# Write the histroy into the user's cache directory (usually ~/.cache),
+# instead of cluttering his/her home directory.
+
+# Create the cache folder and the history file if they don't exist.
+if [[ ! -f "${XDG_CACHE_HOME:-$HOME/.cache}/zsh_history" ]]; then
+  mkdir -p "$HOME/.cache"
+  touch "${XDG_CACHE_HOME:-$HOME/.cache}/zsh_history"
+fi
+
+# Set the variable for the history file.
+HISTFILE="${XDG_CACHE_HOME:-$HOME/.cache}/zsh_history"
+
+# Set the histroy size to a large number, most halfway decent systems
+# should hande that with ease (if you can even manage to fill it up that is).
+HISTSIZE=1000000
+SAVEHIST=1000000
+
+#-----------------------------------------------------------------------#
+
+# Colors.
+
+# Use the TTY colorscheme. To change, replace the hexadecimal color
+# code after \e]PX, where X is the number given to the color
+# (basically like how most terminal emulators like XTerm store their colors).
+# Note: You cannot define a seperate color for black and the background, and
+# the colors from 7 to F may not be shown correctly (instead, you'll see
+# the first 8 colors duplicated).
+if [[ "$TERM" = "linux" ]]; then
+  echo -en "\e]P02e3440"
+  echo -en "\e]P1bf616a"
+  echo -en "\e]P2a3be8c"
+  echo -en "\e]P3ebcb8b"
+  echo -en "\e]P481a1c1"
+  echo -en "\e]P5b48ead"
+  echo -en "\e]P688c0d0"
+  echo -en "\e]P7d8dee9"
+  echo -en "\e]P84c566a"
+  echo -en "\e]P9bf616a"
+  echo -en "\e]PAa3be8c"
+  echo -en "\e]PBebcb8b"
+  echo -en "\e]PC81a1c1"
+  echo -en "\e]PDb48ead"
+  echo -en "\e]PE8fbcbb"
+  echo -en "\e]PFeceff4"
+  clear # needed to remove color artifacts
+fi
+
+# Use 256 color mode.
+export TERM=xterm-256color
+
+# Enable the (simplified) use of colors by loading ZSH's internal
+# color "plugin" conatining variable names.
+autoload -Uz colors && colors
+
+#-----------------------------------------------------------------------#
+
+# Prompt theme.
+
+# Disable the prompt predefined by grml's zshrc. It's good and
+# has nice features like git support, but it may be confusing towards
+# users who want to use their own prompt (or a theme manager like oh-my-zsh)
+# as promptinit overrides those. Plus, this config provides it's own.
+(( $+functions[prompt] )) && prompt off
+
+# Use a custom-written prompt (that can be easily overwriten, it's just
+# here because the hard-coded one in ZSH is really bad and gives next to no information
+# you would expect like the current directory).
+# IMPORTANT: This theme requires a powerline font, it will look broken otherwise!
+
+# Left prompt:
+# Check if git support is installed correctly.
+if [[ -r "/usr/share/zsh/lib/git.zsh" ]]; then
+	# Enable prompt substitution.
+	setopt prompt_subst
+
+	# Enable vcs_info to show some git info.
+	autoload -Uz vcs_info
+	precmd() {
+		vcs_info
+	}
+
+	# Load the git library.
+	source "/usr/share/zsh/lib/git.zsh"
+
+	# Set variables to theme git status.
+	ZSH_THEME_GIT_PROMPT_DIRTY=' !'
+	ZSH_THEME_GIT_PROMPT_PREFIX="%{$bg[yellow]%}%("'!'".%{$fg[magenta]%}.%{$fg[blue]%})"$'\ue0b0'" %{$fg[black]%}"
+	ZSH_THEME_GIT_PROMPT_SUFFIX="%{$fg[yellow]%} %{$reset_color%}%{$fg[yellow]%}"
+	
+	# The actual prompt.
+	PROMPT="%{$bg[white]%}%{$fg[black]%} %n@%m %{$reset_color%}%{$fg[white]%}%("'!'".%{$bg[magenta]%}.%{$bg[blue]%})"$'\ue0b0'"%{$fg[black]%} %~ %# %{$reset_color%}%("'!'".%{$fg[magenta]%}.%{$fg[blue]%})"'$(git_prompt_info)'$'\ue0b0'"%{$reset_color%} "
+else
+	PROMPT="%{$bg[white]%}%{$fg[black]%} %n@%m %{$reset_color%}%{$fg[white]%}%("'!'".%{$bg[magenta]%}.%{$bg[blue]%})"$'\ue0b0'"%{$fg[black]%} %~ %# %{$reset_color%}%("'!'".%{$fg[magenta]%}.%{$fg[blue]%})"$'\ue0b0'"%{$reset_color%} "
+fi
+
+# Right prompt (shows the exit code):
+RPROMPT="%(?..%{$fg[red]%}"$'\ue0b2'"%{$reset_color%}%{$bg[red]%}%{$fg[black]%} %? %{$reset_color%})"
+
+#-----------------------------------------------------------------------#
+
+# Aliases and functions.
+
+# General aliases.
+alias sudo="sudo "
+alias cp='cp -iv'
+alias rm='rm -iv'
+alias mkdir='mkdir -pv'
+alias cd..='cp ..'
+alias pico='nano -p'
+
+# Only alias the following commands if they are (not) being run as root (sudo).
+if [[ "${EUID}" = "0" ]]; then
+  if (( ${+commands[paru]} )) && (( ! ${+commands[yay]} )); then
+    alias yay='sudo -u aurbuilder paru'
+  elif (( ${+commands[yay]} )); then
+    alias yay='sudo -u aurbuilder yay'
+  fi
+else
+  alias userctl='/usr/bin/systemctl --user'
+  alias systemctl='sudo systemctl'
+  alias pacman='sudo pacman'
+fi
+
+# Nohup, but it doesn't clutter the directory it was stared in.
+noout() {
+	nohup "$@" &> /dev/null &
+}
+
+# If you need the class string of a window (for example, to change picom's settings),
+# you can use this function to just get the string instead of basically any info
+# regarding the window.
+get-xclass() {
+	command xprop | command grep 'WM_CLASS(STRING) = ' | command sed 's|WM_CLASS(STRING) = ||g'
+}
+
+#-----------------------------------------------------------------------#
+
+# Load some plugins. If you uninstall them, their respective options
+# below will simply be ignored.
+
+# zsh-autosuggestions. This will show you a suggetion on what command you may want to type.
+if [[ -r "/usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" ]]; then
+  # Load the plugin.
+  . "/usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+
+  # Change the suggestion color to be easyer to see on a variety of background colors.
+  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#898989,underline"
+
+  # First look for matches in the history file, then zsh completions.
+  ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+
+  # Prevent zsh-autosuggestions from loading the entire package database every time you use pacman.
+  ZSH_AUTOSUGGEST_COMPLETION_IGNORE="pacman *"
+
+  # Use asynchronous mode, making zsh-autosuggestions much, much faster.
+  ZSH_AUTOSUGGEST_USE_ASYNC=true
+fi
+
+# zsh-syntax-highlighting. This will make zsh highlight the things you type to
+# help you write commands (and especially functions) without "that one typo"
+# messing everything up causing a massive headache.
+if [[ -r "/usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]]; then
+  # Load the plugin.
+  . "/usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+
+  # Make (binary) commands cyan while leaving other command types
+  # (e.g. aliases or functions) green.
+  ZSH_HIGHLIGHT_STYLES[command]='fg=cyan'
+fi
+
+# zsh-history-substring-search. This will make it possible to use the arrow keys to
+# navigate through your history. Well you can do that already with ZSH by itself,
+# but this is way more powerful.
+if [[ -r "/usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh" ]]; then
+  # Load the plugin.
+  . "/usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh"
+
+  # Use fuzzy search (it only matters if the variable is empty or not).
+  HISTORY_SUBSTRING_SEARCH_FUZZY="true"
+
+  # Create the needed zle widgets.
+  zle -N history-substring-search-up
+  zle -N history-substring-search-down
+
+  # Bind the up/down keys to perform a history search.
+  # Arrow keys:
+  bindkey '^[[A' history-substring-search-up
+  bindkey '^[[B' history-substring-search-down
+
+  # Arrow keys (alternative method):
+  bindkey "$terminfo[kcuu1]" history-substring-search-up
+  bindkey "$terminfo[kcud1]" history-substring-search-down
+
+  # Emacs keys (P & N):
+  bindkey -M emacs '^P' history-substring-search-up
+  bindkey -M emacs '^N' history-substring-search-down
+
+  # Vi keys (k & l):
+  bindkey -M vicmd 'k' history-substring-search-up
+  bindkey -M vicmd 'j' history-substring-search-down
+fi

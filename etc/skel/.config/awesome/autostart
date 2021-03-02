@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Generate the app menu whenever awesome is (re)started. I could not find
+# a way to make an openbox-like pipe menu :/
+xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu >~/.config/awesome/archmenu.lua&
+
+# Define two functions for autostarting, one of them will automatically
+# restart a process if it exits.
+run() {
+	if ! pgrep -f ${1}; then
+		${@} && break
+	fi
+}
+
+rerun() {
+	if ! pgrep -f ${1}; then
+		while true; do
+			${@} && break
+		done
+	fi
+}
+
+# Set the wallpaper
+#rerun nitrogen --restore&
+
+rerun lxsession --session=awesome --de=awesome&
+rerun nm-applet &
+rerun blueman-applet &
+rerun picom &
+rerun xscreensaver -no-splash &
+rerun unclutter -b &
+rerun dunst &
+rerun pcmanfm -d &

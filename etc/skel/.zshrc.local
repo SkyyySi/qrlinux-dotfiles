@@ -1,0 +1,42 @@
+#!/usr/bin/env zsh
+# Please do not put your shell settings (aliases, functions, theme, plugins, ... )
+# in this file. White you CAN do that and everythin should work fine,
+# some of your settings may get overwritten. You can put them into indivudual
+# scripts in $ZSH/profile instead, which has the added bonus of not having one
+# massive file where you can't find anything in. You can also just put everything
+# into one massive file in that directory if you prefer that however.
+
+# The folder everything related to ZSH (e.g. plugins and themes)
+# should be put.
+ZSH="$HOME/.zsh"
+
+# You can add some plugins here.
+# Note: You don't need to add zsh-autosuggestions, zsh-history-substring-search or
+# zsh-syntax-highlighting here if you installed them into /usr/share/plugins
+# (which is the case if you installed them via pacman),
+# as they already get loaded automatically by /etc/zsh/zshrc.local. You'd only
+# add unnecessary lag if you did!
+ZSH_PLUGINS=(colors command-not-found)
+
+# You can define a theme here. 
+# Note: 'none' will not load any theme, even if you have
+# a theme named "none.zsh-theme" in $ZSH/themes.
+# Note 2: If you installed powerlevel10k via pacman, you can
+# simply set it to "powerlevel10k".
+ZSH_THEME="none"
+
+# Set this to anything but "true" if you prefer ls over exa.
+REPLACE_LS_WITH_EXA=true
+
+#-----------------------------------------------------------------------#
+
+# Please do not touch the lines below unless you know what you're doing!
+
+if [[ ! -d "$ZSH" ]]; then
+  [[ -d "$HOME/.zsh" ]] || mkdir -p "$HOME/.zsh"
+  ZSH="$HOME/.zsh"
+fi
+
+if [[ -r "$ZSH/zsh_manager.zsh" ]]; then
+  source "$ZSH/zsh_manager.zsh"
+fi
