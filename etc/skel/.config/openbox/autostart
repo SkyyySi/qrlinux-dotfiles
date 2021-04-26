@@ -1,0 +1,6 @@
+#!/bin/sh
+nitrogen --restore &
+wallupdate &
+lxsession --session=openbox --de=openbox &
+picom &
+tint2 &
